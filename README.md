@@ -14,3 +14,5 @@ This project implements the requested time-editing flow:
 Open the folder in Android Studio and let Gradle sync. Build with **Build > Build APK(s)**.
 
 The repository also contains a GitHub Actions workflow that builds the debug APK automatically when pushed to GitHub.
+
+Build trigger: manual run requested.
