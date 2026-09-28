@@ -1,6 +1,6 @@
 package com.masjid.timeeditor;
 
-import android.app.*; import android.content.*; import android.graphics.*; import android.graphics.drawable.GradientDrawable; import android.view.*; import android.widget.*; import java.util.*;
+import android.app.*; import android.content.*; import android.os.Bundle; import android.graphics.*; import android.graphics.drawable.GradientDrawable; import android.view.*; import android.widget.*; import java.util.*;
 
 public class DialogPicker extends Dialog {
     interface Save { void done(int[] hm); }
