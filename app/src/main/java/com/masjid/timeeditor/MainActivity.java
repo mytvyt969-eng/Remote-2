@@ -41,13 +41,12 @@ public class MainActivity extends Activity {
             fixedJ[i]=prefs.getInt("j"+i,fixedJ[i]);
         }
         for(int i=0;i<5;i++) special[i]=prefs.getInt("sp"+i,special[i]);
-        for(int i=0;i<5;i++){offsets[i]=prefs.getInt("off"+i,offsets[i]);auto[i]=prefs.getBoolean("auto"+i,auto[i]);fixedJ[i]=prefs.getInt("j"+i,fixedJ[i]);}
         jummahAdhan=prefs.getInt("jAdhan",jummahAdhan);jummahKhutbah=prefs.getInt("jKhutbah",jummahKhutbah);jummahJamaat=prefs.getInt("jJamaat",jummahJamaat);
     }
     void save(){
         SharedPreferences.Editor e=prefs.edit().putString("masjid",masjid).putString("announcement",announcement);
         for(int i=0;i<5;i++) e.putInt("ah"+i,ah[i]).putInt("am"+i,am[i]).putInt("off"+i,offsets[i]).putBoolean("auto"+i,auto[i]).putInt("j"+i,fixedJ[i]);
-        for(int i=0;i<5;i++) e.putInt("sp"+i,special[i]).putInt("off"+i,offsets[i]).putBoolean("auto"+i,auto[i]).putInt("j"+i,fixedJ[i]);
+        for(int i=0;i<5;i++) e.putInt("sp"+i,special[i]);
         e.putInt("jAdhan",jummahAdhan).putInt("jKhutbah",jummahKhutbah).putInt("jJamaat",jummahJamaat);
         e.apply(); Toast.makeText(this,"All changes saved",Toast.LENGTH_SHORT).show();
     }
@@ -105,21 +104,81 @@ public class MainActivity extends Activity {
     }
 
     View prayerCard(final int i){
-        LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.VERTICAL);c.setPadding(16,12,16,10);c.setBackground(bg(BORDER,CARD,18));
-        TextView n=tv(PRAYERS[i],21,TEXT);n.setTypeface(null,1);c.addView(n,new LinearLayout.LayoutParams(-1,35));
-        c.addView(tv("Athan",12,MUTED),new LinearLayout.LayoutParams(-1,25));
-        Button ath=btn(format12(toMin(i)));ath.setTextSize(22);ath.setOnClickListener(v->timePicker(PRAYERS[i]+" Athan",toMin(i),m->{setPrayerTime(i,m);showDashboard();}));c.addView(ath,new LinearLayout.LayoutParams(-1,58));
-        LinearLayout ol=new LinearLayout(this);ol.setGravity(Gravity.CENTER_VERTICAL);
-        TextView ot=tv("Jama'at",12,MUTED);ol.addView(ot,new LinearLayout.LayoutParams(0,38,1));
-        final TextView off=tv((offsets[i]>=0?"+":"")+offsets[i]+"m",12,GOLD);off.setGravity(Gravity.CENTER);ol.addView(off,new LinearLayout.LayoutParams(48,38));
-        Button minus=btn("−"),plus=btn("+");minus.setTextSize(20);plus.setTextSize(20);
-        final Button jamaat=btn(jamaatText(i));jamaat.setTextSize(22);jamaat.setTextColor(GOLD);
-        minus.setOnClickListener(v->{if(auto[i]){offsets[i]--;off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");jamaat.setText(jamaatText(i));}});
-        plus.setOnClickListener(v->{if(auto[i]){offsets[i]++;off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");jamaat.setText(jamaatText(i));}});
-        ol.addView(minus,new LinearLayout.LayoutParams(44,38));ol.addView(plus,new LinearLayout.LayoutParams(44,38));c.addView(ol,new LinearLayout.LayoutParams(-1,40));
-        jamaat.setOnClickListener(v->{if(!auto[i])timePicker(PRAYERS[i]+" Jama'at",fixedJ[i],m->{fixedJ[i]=m;showDashboard();});});c.addView(jamaat,new LinearLayout.LayoutParams(-1,58));
-        LinearLayout toggle=new LinearLayout(this);toggle.setGravity(Gravity.CENTER_VERTICAL);TextView at=tv(auto[i]?"Auto Jama'at":"Fixed Schedule",12,MUTED);toggle.addView(at,new LinearLayout.LayoutParams(0,38,1));
-        Button sw=btn(auto[i]?"AUTO":"FIXED");sw.setTextColor(auto[i]?TEAL:MUTED);sw.setTextSize(12);sw.setOnClickListener(v->{auto[i]=!auto[i];showDashboard();});toggle.addView(sw,new LinearLayout.LayoutParams(70,38));c.addView(toggle,new LinearLayout.LayoutParams(-1,42));
+        LinearLayout c=new LinearLayout(this);
+        c.setOrientation(LinearLayout.VERTICAL);
+        c.setPadding(16,14,16,12);
+        c.setBackground(bg(BORDER,CARD,20));
+
+        LinearLayout head=new LinearLayout(this);
+        head.setGravity(Gravity.CENTER_VERTICAL);
+        TextView n=tv(PRAYERS[i],22,TEXT); n.setTypeface(null,1);
+        head.addView(n,new LinearLayout.LayoutParams(0,38,1));
+        TextView period=tv(i==0?"AM":"PM",12,GOLD); period.setGravity(Gravity.CENTER);
+        period.setBackground(bg(0,Color.rgb(13,67,59),16));
+        head.addView(period,new LinearLayout.LayoutParams(48,30));
+        c.addView(head,new LinearLayout.LayoutParams(-1,40));
+
+        TextView al=tv("Athan",12,MUTED);
+        c.addView(al,new LinearLayout.LayoutParams(-1,25));
+
+        Button ath=btn(format12(toMin(i)));
+        ath.setTextSize(21);
+        ath.setTextColor(TEXT);
+        ath.setOnClickListener(v->timePicker(PRAYERS[i]+" Athan",toMin(i),
+                m->{setPrayerTime(i,m);showDashboard();},i==0));
+        c.addView(ath,new LinearLayout.LayoutParams(-1,56));
+
+        LinearLayout jl=new LinearLayout(this);
+        jl.setGravity(Gravity.CENTER_VERTICAL);
+        TextView jt=tv("Jama'at (Iqamah)",12,TEXT);
+        jt.setTypeface(null,1);
+        jl.addView(jt,new LinearLayout.LayoutParams(0,36,1));
+        TextView off=tv((offsets[i]>=0?"+":"")+offsets[i]+"m",12,GOLD);
+        off.setGravity(Gravity.CENTER);
+        jl.addView(off,new LinearLayout.LayoutParams(54,36));
+        c.addView(jl,new LinearLayout.LayoutParams(-1,38));
+
+        final Button jamaat=btn(jamaatText(i));
+        jamaat.setTextSize(21);
+        jamaat.setTextColor(GOLD);
+        jamaat.setOnClickListener(v->{
+            if(!auto[i]) timePicker(PRAYERS[i]+" Jama'at",fixedJ[i],
+                    m->{fixedJ[i]=m;showDashboard();},i==0);
+        });
+
+        LinearLayout controls=new LinearLayout(this);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        Button minus=btn("−"),plus=btn("+");
+        minus.setTextSize(20); plus.setTextSize(20);
+        minus.setOnClickListener(v->{
+            if(auto[i]){
+                offsets[i]--;
+                off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
+                jamaat.setText(jamaatText(i));
+            }
+        });
+        plus.setOnClickListener(v->{
+            if(auto[i]){
+                offsets[i]++;
+                off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
+                jamaat.setText(jamaatText(i));
+            }
+        });
+        controls.addView(jamaat,new LinearLayout.LayoutParams(0,56,1));
+        controls.addView(minus,new LinearLayout.LayoutParams(44,48));
+        controls.addView(plus,new LinearLayout.LayoutParams(44,48));
+        c.addView(controls,new LinearLayout.LayoutParams(-1,60));
+
+        LinearLayout toggle=new LinearLayout(this);
+        toggle.setGravity(Gravity.CENTER_VERTICAL);
+        TextView mode=tv(auto[i]?"Auto Iqamah":"Fixed Schedule",12,MUTED);
+        toggle.addView(mode,new LinearLayout.LayoutParams(0,38,1));
+        Button sw=btn(auto[i]?"AUTO":"FIXED");
+        sw.setTextColor(auto[i]?TEAL:MUTED);
+        sw.setTextSize(12);
+        sw.setOnClickListener(v->{auto[i]=!auto[i];showDashboard();});
+        toggle.addView(sw,new LinearLayout.LayoutParams(78,38));
+        c.addView(toggle,new LinearLayout.LayoutParams(-1,42));
         return c;
     }
 
@@ -178,11 +237,45 @@ public class MainActivity extends Activity {
     }
 
     void timePicker(String title,int initial,TimeSave callback){
-        LinearLayout b=new LinearLayout(this);b.setGravity(Gravity.CENTER);NumberPicker hp=new NumberPicker(this),mp=new NumberPicker(this),pp=new NumberPicker(this);
-        hp.setMinValue(1);hp.setMaxValue(12);mp.setMinValue(0);mp.setMaxValue(59);pp.setMinValue(0);pp.setMaxValue(1);pp.setDisplayedValues(new String[]{"AM","PM"});
-        int h=initial/60%24;hp.setValue(h%12==0?12:h%12);mp.setValue(initial%60);pp.setValue(h<12?0:1);
-        b.addView(hp,new LinearLayout.LayoutParams(130,220));b.addView(tv(":",30,TEXT),new LinearLayout.LayoutParams(35,220));b.addView(mp,new LinearLayout.LayoutParams(130,220));b.addView(pp,new LinearLayout.LayoutParams(120,220));
-        new AlertDialog.Builder(this).setTitle(title).setView(b).setNegativeButton("CANCEL",null).setPositiveButton("OK",(d,w)->{int hh=hp.getValue()%12+(pp.getValue()==1?12:0);callback.done(hh*60+mp.getValue());}).show();
+        timePicker(title,initial,callback,-1);
     }
+
+    void timePicker(String title,int initial,TimeSave callback,int forcedPeriod){
+        LinearLayout b=new LinearLayout(this);
+        b.setGravity(Gravity.CENTER);
+        NumberPicker hp=new NumberPicker(this),mp=new NumberPicker(this),pp=new NumberPicker(this);
+        hp.setMinValue(1); hp.setMaxValue(12);
+        mp.setMinValue(0); mp.setMaxValue(59);
+        int h=initial/60%24;
+        hp.setValue(h%12==0?12:h%12);
+        mp.setValue(initial%60);
+
+        if(forcedPeriod==0 || forcedPeriod==1){
+            pp.setMinValue(forcedPeriod);
+            pp.setMaxValue(forcedPeriod);
+            pp.setDisplayedValues(new String[]{forcedPeriod==0?"AM":"PM"});
+            pp.setValue(forcedPeriod);
+        }else{
+            pp.setMinValue(0); pp.setMaxValue(1);
+            pp.setDisplayedValues(new String[]{"AM","PM"});
+            pp.setValue(h<12?0:1);
+        }
+
+        b.addView(hp,new LinearLayout.LayoutParams(120,190));
+        b.addView(tv(":",28,TEXT),new LinearLayout.LayoutParams(30,190));
+        b.addView(mp,new LinearLayout.LayoutParams(120,190));
+        b.addView(pp,new LinearLayout.LayoutParams(105,190));
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(b)
+                .setNegativeButton("CANCEL",null)
+                .setPositiveButton("OK",(d,w)->{
+                    int period=(forcedPeriod==0||forcedPeriod==1)?forcedPeriod:pp.getValue();
+                    int hh=hp.getValue()%12+(period==1?12:0);
+                    callback.done(hh*60+mp.getValue());
+                }).show();
+    }
+
     interface TimeSave{void done(int m);}
 }
