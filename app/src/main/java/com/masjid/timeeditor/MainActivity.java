@@ -112,9 +112,11 @@ public class MainActivity extends Activity {
 
         LinearLayout head=new LinearLayout(this);
         head.setGravity(Gravity.CENTER_VERTICAL);
-        TextView n=tv(PRAYERS[i],22,TEXT); n.setTypeface(null,1);
+        TextView n=tv(PRAYERS[i],22,TEXT);
+        n.setTypeface(null,1);
         head.addView(n,new LinearLayout.LayoutParams(0,38,1));
-        TextView period=tv(i==0?"AM":"PM",12,GOLD); period.setGravity(Gravity.CENTER);
+        TextView period=tv(i==0?"AM":"PM",12,GOLD);
+        period.setGravity(Gravity.CENTER);
         period.setBackground(bg(0,Color.rgb(13,67,59),16));
         head.addView(period,new LinearLayout.LayoutParams(48,30));
         c.addView(head,new LinearLayout.LayoutParams(-1,40));
@@ -122,15 +124,15 @@ public class MainActivity extends Activity {
         TextView al=tv("Athan",12,MUTED);
         c.addView(al,new LinearLayout.LayoutParams(-1,25));
 
-        // Direct Athan editor: TV-friendly time field with stacked up/down arrows.
+        // Athan is display-only here. The time can only be changed with the
+        // dedicated UP/DOWN controls, so the time itself is not selectable.
         LinearLayout athRow=new LinearLayout(this);
         athRow.setGravity(Gravity.CENTER_VERTICAL);
-        Button ath=btn(format12(toMin(i)));
-        ath.setTextSize(21);
-        ath.setTextColor(TEXT);
+        TextView ath=tv(format12(toMin(i)),21,TEXT);
         ath.setGravity(Gravity.CENTER);
-        ath.setOnClickListener(v->timePicker(PRAYERS[i]+" Athan",toMin(i),
-                m->{setPrayerTime(i,m);showDashboard();},i==0?0:1));
+        ath.setFocusable(false);
+        ath.setClickable(false);
+        ath.setBackground(bg(BORDER,FIELD,14));
         athRow.addView(ath,new LinearLayout.LayoutParams(0,56,1));
 
         LinearLayout athArrows=new LinearLayout(this);
@@ -143,17 +145,16 @@ public class MainActivity extends Activity {
         athUp.setOnClickListener(v->{
             setPrayerTime(i,toMin(i)+1);
             ath.setText(format12(toMin(i)));
+            jamaat.setText(jamaatText(i));
         });
         athDown.setOnClickListener(v->{
             setPrayerTime(i,toMin(i)-1);
             ath.setText(format12(toMin(i)));
+            jamaat.setText(jamaatText(i));
         });
         athArrows.addView(athUp,new LinearLayout.LayoutParams(48,28));
         athArrows.addView(athDown,new LinearLayout.LayoutParams(48,28));
         athRow.addView(athArrows,new LinearLayout.LayoutParams(48,56));
-        TextView periodLabel=tv(i==0?"AM":"PM",12,GOLD);
-        periodLabel.setGravity(Gravity.CENTER);
-        athRow.addView(periodLabel,new LinearLayout.LayoutParams(42,56));
         c.addView(athRow,new LinearLayout.LayoutParams(-1,60));
 
         LinearLayout jl=new LinearLayout(this);
@@ -161,30 +162,40 @@ public class MainActivity extends Activity {
         TextView jt=tv("Jama'at (Iqamah)",12,TEXT);
         jt.setTypeface(null,1);
         jl.addView(jt,new LinearLayout.LayoutParams(0,36,1));
-        TextView off=tv((offsets[i]>=0?"+":"")+offsets[i]+"m",12,GOLD);
-        off.setGravity(Gravity.CENTER);
-        jl.addView(off,new LinearLayout.LayoutParams(54,36));
         c.addView(jl,new LinearLayout.LayoutParams(-1,38));
 
-        final Button jamaat=btn(jamaatText(i));
-        jamaat.setTextSize(21);
-        jamaat.setTextColor(GOLD);
-        jamaat.setOnClickListener(v->{
-            if(!auto[i]) timePicker(PRAYERS[i]+" Jama'at",fixedJ[i],
-                    m->{fixedJ[i]=m;showDashboard();},i==0?0:1);
-        });
+        final TextView jamaat=tv(jamaatText(i),21,GOLD);
+        jamaat.setGravity(Gravity.CENTER);
+        jamaat.setBackground(bg(BORDER,FIELD,14));
 
-        LinearLayout controls=new LinearLayout(this);
-        controls.setGravity(Gravity.CENTER_VERTICAL);
-        Button minus=btn("−"),plus=btn("+");
-        minus.setTextSize(20); plus.setTextSize(20);
-        minus.setOnClickListener(v->{
-            if(auto[i]){
-                offsets[i]--;
-                off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
-                jamaat.setText(jamaatText(i));
-            }
-        });
+        if(!auto[i]){
+            jamaat.setFocusable(true);
+            jamaat.setClickable(true);
+            jamaat.setBackground(focusBg());
+            jamaat.setOnClickListener(v->timePicker(PRAYERS[i]+" Jama'at",fixedJ[i],
+                    m->{fixedJ[i]=m;showDashboard();},i==0?0:1));
+        }else{
+            jamaat.setFocusable(false);
+            jamaat.setClickable(false);
+        }
+        c.addView(jamaat,new LinearLayout.LayoutParams(-1,54));
+
+        // Auto Iqamah controls: + [offset] -.
+        // The +/- buttons change the offset, and Jama'at is recalculated
+        // from Athan + offset. They are intentionally NOT beside the Jama'at time.
+        LinearLayout offsetRow=new LinearLayout(this);
+        offsetRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView offsetLabel=tv(auto[i]?"Iqamah offset":"Fixed schedule",12,MUTED);
+        offsetLabel.setGravity(Gravity.CENTER_VERTICAL);
+        offsetRow.addView(offsetLabel,new LinearLayout.LayoutParams(0,44,1));
+
+        Button plus=btn("+");
+        plus.setTextSize(19);
+        TextView off=tv((offsets[i]>=0?"+":"")+offsets[i]+"m",13,GOLD);
+        off.setGravity(Gravity.CENTER);
+        Button minus=btn("−");
+        minus.setTextSize(19);
+
         plus.setOnClickListener(v->{
             if(auto[i]){
                 offsets[i]++;
@@ -192,10 +203,20 @@ public class MainActivity extends Activity {
                 jamaat.setText(jamaatText(i));
             }
         });
-        controls.addView(jamaat,new LinearLayout.LayoutParams(0,56,1));
-        controls.addView(minus,new LinearLayout.LayoutParams(44,48));
-        controls.addView(plus,new LinearLayout.LayoutParams(44,48));
-        c.addView(controls,new LinearLayout.LayoutParams(-1,60));
+        minus.setOnClickListener(v->{
+            if(auto[i]){
+                offsets[i]--;
+                off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
+                jamaat.setText(jamaatText(i));
+            }
+        });
+
+        plus.setEnabled(auto[i]);
+        minus.setEnabled(auto[i]);
+        offsetRow.addView(plus,new LinearLayout.LayoutParams(42,44));
+        offsetRow.addView(off,new LinearLayout.LayoutParams(58,44));
+        offsetRow.addView(minus,new LinearLayout.LayoutParams(42,44));
+        c.addView(offsetRow,new LinearLayout.LayoutParams(-1,48));
 
         LinearLayout toggle=new LinearLayout(this);
         toggle.setGravity(Gravity.CENTER_VERTICAL);
