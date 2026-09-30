@@ -121,12 +121,39 @@ public class MainActivity extends Activity {
         TextView al=tv("Athan",12,MUTED);
         c.addView(al,new LinearLayout.LayoutParams(-1,25));
 
+        // Direct Athan editor: TV-friendly time field with stacked up/down arrows.
+        LinearLayout athRow=new LinearLayout(this);
+        athRow.setGravity(Gravity.CENTER_VERTICAL);
         Button ath=btn(format12(toMin(i)));
         ath.setTextSize(21);
         ath.setTextColor(TEXT);
+        ath.setGravity(Gravity.CENTER);
         ath.setOnClickListener(v->timePicker(PRAYERS[i]+" Athan",toMin(i),
                 m->{setPrayerTime(i,m);showDashboard();},i==0?0:1));
-        c.addView(ath,new LinearLayout.LayoutParams(-1,56));
+        athRow.addView(ath,new LinearLayout.LayoutParams(0,56,1));
+
+        LinearLayout athArrows=new LinearLayout(this);
+        athArrows.setOrientation(LinearLayout.VERTICAL);
+        Button athUp=btn("▲"), athDown=btn("▼");
+        athUp.setTextSize(12);
+        athDown.setTextSize(12);
+        athUp.setPadding(0,0,0,0);
+        athDown.setPadding(0,0,0,0);
+        athUp.setOnClickListener(v->{
+            setPrayerTime(i,toMin(i)+1);
+            ath.setText(format12(toMin(i)));
+        });
+        athDown.setOnClickListener(v->{
+            setPrayerTime(i,toMin(i)-1);
+            ath.setText(format12(toMin(i)));
+        });
+        athArrows.addView(athUp,new LinearLayout.LayoutParams(48,28));
+        athArrows.addView(athDown,new LinearLayout.LayoutParams(48,28));
+        athRow.addView(athArrows,new LinearLayout.LayoutParams(48,56));
+        TextView periodLabel=tv(i==0?"AM":"PM",12,GOLD);
+        periodLabel.setGravity(Gravity.CENTER);
+        athRow.addView(periodLabel,new LinearLayout.LayoutParams(42,56));
+        c.addView(athRow,new LinearLayout.LayoutParams(-1,60));
 
         LinearLayout jl=new LinearLayout(this);
         jl.setGravity(Gravity.CENTER_VERTICAL);
