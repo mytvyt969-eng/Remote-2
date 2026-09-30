@@ -240,41 +240,116 @@ public class MainActivity extends Activity {
         timePicker(title,initial,callback,-1);
     }
 
+    // Compact TV-friendly editor: no Android wheel/NumberPicker dialog.
     void timePicker(String title,int initial,TimeSave callback,int forcedPeriod){
-        LinearLayout b=new LinearLayout(this);
-        b.setGravity(Gravity.CENTER);
-        NumberPicker hp=new NumberPicker(this),mp=new NumberPicker(this),pp=new NumberPicker(this);
-        hp.setMinValue(1); hp.setMaxValue(12);
-        mp.setMinValue(0); mp.setMaxValue(59);
-        int h=initial/60%24;
-        hp.setValue(h%12==0?12:h%12);
-        mp.setValue(initial%60);
+        final Dialog dialog=new Dialog(this);
+        LinearLayout box=new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(28,24,28,24);
+        box.setBackground(bg(BORDER,Color.rgb(7,38,35),24));
 
-        if(forcedPeriod==0 || forcedPeriod==1){
-            pp.setMinValue(forcedPeriod);
-            pp.setMaxValue(forcedPeriod);
-            pp.setDisplayedValues(new String[]{forcedPeriod==0?"AM":"PM"});
-            pp.setValue(forcedPeriod);
+        TextView heading=tv(title,22,TEXT);
+        heading.setTypeface(null,1);
+        box.addView(heading,new LinearLayout.LayoutParams(-1,42));
+
+        int start=(initial+1440)%1440;
+        final int[] hour={start/60%12==0?12:start/60%12};
+        final int[] minute={start%60};
+        final int[] period={start/60<12?0:1};
+        final TextView value=tv(format12(start),30,GOLD);
+        value.setGravity(Gravity.CENTER);
+        value.setTypeface(null,1);
+        value.setPadding(0,8,0,12);
+        box.addView(value,new LinearLayout.LayoutParams(-1,58));
+
+        LinearLayout hr=new LinearLayout(this);
+        hr.setGravity(Gravity.CENTER);
+        Button hMinus=btn("−"), hPlus=btn("+");
+        TextView hLabel=tv("HOUR\n"+String.format(Locale.US,"%02d",hour[0]),17,TEXT);
+        hLabel.setGravity(Gravity.CENTER);
+        hr.addView(hMinus,new LinearLayout.LayoutParams(82,58));
+        hr.addView(hLabel,new LinearLayout.LayoutParams(170,58));
+        hr.addView(hPlus,new LinearLayout.LayoutParams(82,58));
+        box.addView(hr,new LinearLayout.LayoutParams(-1,64));
+
+        LinearLayout mr=new LinearLayout(this);
+        mr.setGravity(Gravity.CENTER);
+        Button mMinus=btn("−"), mPlus=btn("+");
+        TextView mLabel=tv("MINUTE\n"+String.format(Locale.US,"%02d",minute[0]),17,TEXT);
+        mLabel.setGravity(Gravity.CENTER);
+        mr.addView(mMinus,new LinearLayout.LayoutParams(82,58));
+        mr.addView(mLabel,new LinearLayout.LayoutParams(170,58));
+        mr.addView(mPlus,new LinearLayout.LayoutParams(82,58));
+        box.addView(mr,new LinearLayout.LayoutParams(-1,64));
+
+        LinearLayout pr=new LinearLayout(this);
+        pr.setGravity(Gravity.CENTER);
+        Button amBtn=btn("AM"), pmBtn=btn("PM");
+        if(forcedPeriod==0){
+            amBtn.setTextColor(TEAL); pmBtn.setTextColor(MUTED); pmBtn.setEnabled(false);
+        }else if(forcedPeriod==1){
+            amBtn.setTextColor(MUTED); amBtn.setEnabled(false); pmBtn.setTextColor(TEAL);
         }else{
-            pp.setMinValue(0); pp.setMaxValue(1);
-            pp.setDisplayedValues(new String[]{"AM","PM"});
-            pp.setValue(h<12?0:1);
+            amBtn.setTextColor(period[0]==0?TEAL:MUTED);
+            pmBtn.setTextColor(period[0]==1?TEAL:MUTED);
         }
+        pr.addView(amBtn,new LinearLayout.LayoutParams(120,50));
+        pr.addView(pmBtn,new LinearLayout.LayoutParams(120,50));
+        box.addView(pr,new LinearLayout.LayoutParams(-1,58));
 
-        b.addView(hp,new LinearLayout.LayoutParams(120,190));
-        b.addView(tv(":",28,TEXT),new LinearLayout.LayoutParams(30,190));
-        b.addView(mp,new LinearLayout.LayoutParams(120,190));
-        b.addView(pp,new LinearLayout.LayoutParams(105,190));
+        LinearLayout actions=new LinearLayout(this);
+        actions.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+        Button cancel=btn("CANCEL"), ok=btn("OK");
+        cancel.setTextColor(MUTED); ok.setTextColor(GOLD);
+        actions.addView(cancel,new LinearLayout.LayoutParams(130,52));
+        actions.addView(ok,new LinearLayout.LayoutParams(110,52));
+        box.addView(actions,new LinearLayout.LayoutParams(-1,62));
 
-        new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setView(b)
-                .setNegativeButton("CANCEL",null)
-                .setPositiveButton("OK",(d,w)->{
-                    int period=(forcedPeriod==0||forcedPeriod==1)?forcedPeriod:pp.getValue();
-                    int hh=hp.getValue()%12+(period==1?12:0);
-                    callback.done(hh*60+mp.getValue());
-                }).show();
+        Runnable refresh=()->{
+            int p=(forcedPeriod==0||forcedPeriod==1)?forcedPeriod:period[0];
+            int hh=hour[0]%12+(p==1?12:0);
+            value.setText(format12(hh*60+minute[0]));
+            hLabel.setText("HOUR\n"+String.format(Locale.US,"%02d",hour[0]));
+            mLabel.setText("MINUTE\n"+String.format(Locale.US,"%02d",minute[0]));
+            if(forcedPeriod==-1){
+                amBtn.setTextColor(p==0?TEAL:MUTED);
+                pmBtn.setTextColor(p==1?TEAL:MUTED);
+            }
+        };
+
+        hMinus.setOnClickListener(v->{hour[0]--;if(hour[0]<1)hour[0]=12;refresh.run();});
+        hPlus.setOnClickListener(v->{hour[0]++;if(hour[0]>12)hour[0]=1;refresh.run();});
+        mMinus.setOnClickListener(v->{minute[0]--;if(minute[0]<0)minute[0]=59;refresh.run();});
+        mPlus.setOnClickListener(v->{minute[0]++;if(minute[0]>59)minute[0]=0;refresh.run();});
+        amBtn.setOnClickListener(v->{if(forcedPeriod==-1){period[0]=0;refresh.run();}});
+        pmBtn.setOnClickListener(v->{if(forcedPeriod==-1){period[0]=1;refresh.run();}});
+        cancel.setOnClickListener(v->dialog.dismiss());
+        ok.setOnClickListener(v->{
+            int p=(forcedPeriod==0||forcedPeriod==1)?forcedPeriod:period[0];
+            int hh=hour[0]%12+(p==1?12:0);
+            callback.done(hh*60+minute[0]);
+            dialog.dismiss();
+        });
+
+        dialog.setContentView(box);
+        dialog.setOnShowListener(d->{
+            Window w=dialog.getWindow();
+            if(w!=null){
+                w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                w.setDimAmount(0.72f);
+                w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                w.setLayout(620,WindowManager.LayoutParams.WRAP_CONTENT);
+            }
+            hMinus.requestFocus();
+        });
+        dialog.show();
+        Window w=dialog.getWindow();
+        if(w!=null){
+            w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            w.setDimAmount(0.72f);
+            w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            w.setLayout(620,WindowManager.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     interface TimeSave{void done(int m);}
