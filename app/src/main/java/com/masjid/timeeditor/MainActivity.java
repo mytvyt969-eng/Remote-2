@@ -14,12 +14,11 @@ public class MainActivity extends Activity {
     static final String[] PRAYERS={"Fajar","Dhuhr","Asr","Maghrib","Isha"};
     static final String[] SPECIAL={"Eid","Eid ul adha","Jummah","Sheri","Iftar"};
     final int[] ah={5,12,4,5,7}, am={8,15,15,58,30};
-    int[] offsets={12,0,30,5,15}; boolean[] auto={true,false,true,true,true}; int[] fixedJ={0,810,0,0,0};
-    int[] special={390,390,0,270,1110}; int jummahAdhan=735,jummahKhutbah=780,jummahJamaat=810;
     final int[] offsets={12,0,30,5,15};
     boolean[] auto={true,false,true,true,true};
     int[] fixedJ={0,13*60+30,0,0,0};
-    int[] special={6*60+30,6*60+30,13*60+30,4*60+30,18*60+30};
+    int[] special={6*60+30,6*60+30,0,4*60+30,18*60+30};
+    int jummahAdhan=735,jummahKhutbah=780,jummahJamaat=810;
 
     LinearLayout root,main;
     SharedPreferences prefs;
