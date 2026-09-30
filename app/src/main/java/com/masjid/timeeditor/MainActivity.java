@@ -126,6 +126,7 @@ public class MainActivity extends Activity {
 
         // Athan is display-only here. The time can only be changed with the
         // dedicated UP/DOWN controls, so the time itself is not selectable.
+        final TextView[] jamaatRef=new TextView[1];
         LinearLayout athRow=new LinearLayout(this);
         athRow.setGravity(Gravity.CENTER_VERTICAL);
         TextView ath=tv(format12(toMin(i)),21,TEXT);
@@ -145,7 +146,7 @@ public class MainActivity extends Activity {
         athUp.setOnClickListener(v->{
             setPrayerTime(i,toMin(i)+1);
             ath.setText(format12(toMin(i)));
-            jamaat.setText(jamaatText(i));
+            if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
         });
         athDown.setOnClickListener(v->{
             setPrayerTime(i,toMin(i)-1);
@@ -165,6 +166,7 @@ public class MainActivity extends Activity {
         c.addView(jl,new LinearLayout.LayoutParams(-1,38));
 
         final TextView jamaat=tv(jamaatText(i),21,GOLD);
+        jamaatRef[0]=jamaat;
         jamaat.setGravity(Gravity.CENTER);
         jamaat.setBackground(bg(BORDER,FIELD,14));
 
