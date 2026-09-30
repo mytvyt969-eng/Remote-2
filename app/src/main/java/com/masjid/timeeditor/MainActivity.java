@@ -1,5 +1,6 @@
 package com.masjid.timeeditor;
 
+import android.app.Dialog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
