@@ -151,7 +151,7 @@ public class MainActivity extends Activity {
         athDown.setOnClickListener(v->{
             setPrayerTime(i,toMin(i)-1);
             ath.setText(format12(toMin(i)));
-            jamaat.setText(jamaatText(i));
+            if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
         });
         athArrows.addView(athUp,new LinearLayout.LayoutParams(48,28));
         athArrows.addView(athDown,new LinearLayout.LayoutParams(48,28));
@@ -202,14 +202,14 @@ public class MainActivity extends Activity {
             if(auto[i]){
                 offsets[i]++;
                 off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
-                jamaat.setText(jamaatText(i));
+                if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
             }
         });
         minus.setOnClickListener(v->{
             if(auto[i]){
                 offsets[i]--;
                 off.setText((offsets[i]>=0?"+":"")+offsets[i]+"m");
-                jamaat.setText(jamaatText(i));
+                if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
             }
         });
 
