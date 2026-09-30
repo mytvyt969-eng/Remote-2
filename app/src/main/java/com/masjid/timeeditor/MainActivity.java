@@ -124,16 +124,22 @@ public class MainActivity extends Activity {
         TextView al=tv("Athan",12,MUTED);
         c.addView(al,new LinearLayout.LayoutParams(-1,25));
 
-        // Athan is display-only here. The time can only be changed with the
-        // dedicated UP/DOWN controls, so the time itself is not selectable.
+        // The whole Athan area is one TV-remote focus target.
+        // Press OK/ENTER to enter edit mode, then UP/DOWN changes the minute.
         final TextView[] jamaatRef=new TextView[1];
+        final boolean[] athanEditing={false};
+
         LinearLayout athRow=new LinearLayout(this);
         athRow.setGravity(Gravity.CENTER_VERTICAL);
+        athRow.setFocusable(true);
+        athRow.setClickable(true);
+        athRow.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        athRow.setPadding(0,0,0,0);
+
         TextView ath=tv(format12(toMin(i)),21,TEXT);
         ath.setGravity(Gravity.CENTER);
         ath.setFocusable(false);
         ath.setClickable(false);
-        ath.setBackground(bg(BORDER,FIELD,14));
         athRow.addView(ath,new LinearLayout.LayoutParams(0,56,1));
 
         LinearLayout athArrows=new LinearLayout(this);
@@ -141,21 +147,59 @@ public class MainActivity extends Activity {
         Button athUp=btn("▲"), athDown=btn("▼");
         athUp.setTextSize(12);
         athDown.setTextSize(12);
+        athUp.setFocusable(false);
+        athDown.setFocusable(false);
+        athUp.setClickable(false);
+        athDown.setClickable(false);
         athUp.setPadding(0,0,0,0);
         athDown.setPadding(0,0,0,0);
-        athUp.setOnClickListener(v->{
-            setPrayerTime(i,toMin(i)+1);
-            ath.setText(format12(toMin(i)));
-            if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
-        });
-        athDown.setOnClickListener(v->{
-            setPrayerTime(i,toMin(i)-1);
-            ath.setText(format12(toMin(i)));
-            if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
-        });
+        // These are visual indicators only. The remote controls the whole row.
         athArrows.addView(athUp,new LinearLayout.LayoutParams(48,28));
         athArrows.addView(athDown,new LinearLayout.LayoutParams(48,28));
         athRow.addView(athArrows,new LinearLayout.LayoutParams(48,56));
+
+        Runnable refreshAthan=()->{
+            ath.setText(format12(toMin(i)));
+            if(jamaatRef[0]!=null) jamaatRef[0].setText(jamaatText(i));
+        };
+        Runnable setEditing=()->{
+            athanEditing[0]=true;
+            athRow.setActivated(true);
+            athRow.setBackground(bg(GOLD,Color.rgb(17,67,59),14));
+        };
+        Runnable clearEditing=()->{
+            athanEditing[0]=false;
+            athRow.setActivated(false);
+            athRow.setBackground(focusBg());
+        };
+
+        athRow.setBackground(focusBg());
+        athRow.setOnClickListener(v->{
+            if(!athanEditing[0]) setEditing.run();
+            else clearEditing.run();
+        });
+        athRow.setOnKeyListener((v,key,event)->{
+            if(event.getAction()!=KeyEvent.ACTION_DOWN) return false;
+
+            if(key==KeyEvent.KEYCODE_DPAD_CENTER || key==KeyEvent.KEYCODE_ENTER){
+                if(athanEditing[0]) clearEditing.run();
+                else setEditing.run();
+                return true;
+            }
+
+            if(athanEditing[0] && key==KeyEvent.KEYCODE_DPAD_UP){
+                setPrayerTime(i,toMin(i)+1);
+                refreshAthan.run();
+                return true;
+            }
+            if(athanEditing[0] && key==KeyEvent.KEYCODE_DPAD_DOWN){
+                setPrayerTime(i,toMin(i)-1);
+                refreshAthan.run();
+                return true;
+            }
+            return false;
+        });
+
         c.addView(athRow,new LinearLayout.LayoutParams(-1,60));
 
         LinearLayout jl=new LinearLayout(this);
