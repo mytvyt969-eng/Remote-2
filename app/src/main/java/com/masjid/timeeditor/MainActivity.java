@@ -125,7 +125,7 @@ public class MainActivity extends Activity {
         ath.setTextSize(21);
         ath.setTextColor(TEXT);
         ath.setOnClickListener(v->timePicker(PRAYERS[i]+" Athan",toMin(i),
-                m->{setPrayerTime(i,m);showDashboard();},i==0));
+                m->{setPrayerTime(i,m);showDashboard();},i==0?0:1));
         c.addView(ath,new LinearLayout.LayoutParams(-1,56));
 
         LinearLayout jl=new LinearLayout(this);
@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
         jamaat.setTextColor(GOLD);
         jamaat.setOnClickListener(v->{
             if(!auto[i]) timePicker(PRAYERS[i]+" Jama'at",fixedJ[i],
-                    m->{fixedJ[i]=m;showDashboard();},i==0);
+                    m->{fixedJ[i]=m;showDashboard();},i==0?0:1);
         });
 
         LinearLayout controls=new LinearLayout(this);
